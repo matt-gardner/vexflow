@@ -13,7 +13,7 @@ Vex.Flow.TextSVGContext = (function() {
     init: function(options) {
       this.React = options.React;
       this.ReactDOMServer = options.ReactDOMServer;
-      this.fontObj = options.font;
+      this.fontPack = options.fontPack;
       this.getBoundingBox = options.getBoundingBox;
 
       TextSVGContext.superclass.init.call(this, this.create('div'));
@@ -62,7 +62,8 @@ Vex.Flow.TextSVGContext = (function() {
 
       var path = this.create('path');
       var fontSize = this.getFontSize();
-      var pathData = this.fontObj.getPath(text, x, y, fontSize).toPathData();
+      var font = this.fontPack.getFont(attributes);
+      var pathData = font.getPath(text, x, y, fontSize).toPathData();
 
       attributes.d = pathData;
       attributes.stroke = "none";
@@ -90,7 +91,8 @@ Vex.Flow.TextSVGContext = (function() {
 
     measureText: function(text) {
       var fontSize = this.getFontSize();
-      var pathData = this.fontObj.getPath(text, 0, 0, fontSize).toPathData();
+      var font = this.fontPack.getFont(this.attributes);
+      var pathData = font.getPath(text, 0, 0, fontSize).toPathData();
 
       return this.getBoundingBox(pathData);
     },
