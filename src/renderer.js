@@ -60,6 +60,13 @@ Vex.Flow.Renderer = (function() {
         width, height, background);
   };
 
+  Renderer.getTextSVGContext = function(options, width, height, background) {
+    var ctx = new Vex.Flow.TextSVGContext(options);
+    ctx.resize(width, height);
+
+    Renderer.lastContext = ctx;
+    return ctx;
+  };
 
   Renderer.bolsterCanvasContext = function(ctx) {
     if (Renderer.USE_CANVAS_PROXY) {
@@ -165,5 +172,3 @@ Vex.Flow.Renderer = (function() {
 
   return Renderer;
 }());
-
-

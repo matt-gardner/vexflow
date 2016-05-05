@@ -60,6 +60,7 @@ module.exports = function(grunt) {
                   "src/renderer.js",
                   "src/raphaelcontext.js",
                   "src/svgcontext.js",
+                  "src/textsvgcontext.js",
                   "src/canvascontext.js",
                   "src/stavebarline.js",
                   "src/stavehairpin.js",

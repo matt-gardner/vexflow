@@ -5,8 +5,11 @@
 
 // Mock out the QUnit stuff for generating svg images,
 // since we don't really care about the assertions.
+if (typeof window === 'undefined') window = {};
+
 if (!window.QUnit) {
-  window.QUnit = {}
+  QUnit = {};
+  window.QUnit = QUnit;
 
   QUnit.assertions = {
     ok: function() {return true;},
@@ -46,6 +49,9 @@ VF.Test = (function() {
 
     // Where images are stored for NodeJS tests.
     NODE_IMAGEDIR: "images",
+
+    // Init options for TextSVGContext
+    NodeOptions: {},
 
     // Default font properties for tests.
     Font: {size: 10},
@@ -155,33 +161,28 @@ VF.Test = (function() {
       }
 
       QUnit.test(name, function(assert) {
-        var div = document.createElement("div");
-        div.setAttribute("id", "canvas_" + VF.Test.genID());
-        document.getElementsByTagName('body')[0].appendChild(div);
-
         func({
-          canvas_sel: div,
+          canvas_sel: VF.Test.NodeOptions,
           params: params,
           assert: assert },
-          VF.Renderer.getSVGContext);
-
-        if (VF.Renderer.lastContext != null) {
-          // If an SVG context was used, then serialize and save its contents to
-          // a local file.
-          var svgData = new XMLSerializer().serializeToString(VF.Renderer.lastContext.svg);
-
-          var moduleName = sanitizeName(QUnit.current_module);
-          var testName = sanitizeName(QUnit.current_test);
-          var filename = VF.Test.NODE_IMAGEDIR + "/" + moduleName + "." + testName + ".svg";
-          try {
-            fs.write(filename, svgData, "w");
-          } catch(e) {
-            console.log("Can't save file: " + filename + ". Error: " + e);
-            slimer.exit();
-          };
-          VF.Renderer.lastContext = null;
-        }
+        VF.Renderer.getTextSVGContext);
       });
+
+      if (VF.Renderer.lastContext == null) {
+        console.log('VF.Renderer.lastContext does not exist!');
+        return;
+      }
+
+      var svgData = VF.Renderer.lastContext.toSVG();
+      var moduleName = sanitizeName(QUnit.current_module);
+      var testName = sanitizeName(QUnit.current_test);
+      var filename = VF.Test.NODE_IMAGEDIR + "/" + moduleName + "." + testName + ".svg";
+
+      try {
+        fs.writeFileSync(filename, svgData);
+      } catch(e) {
+        console.log("Can't save file: " + filename + ". Error: " + e);
+      }
     },
 
     plotNoteWidth: VF.Note.plotMetrics,

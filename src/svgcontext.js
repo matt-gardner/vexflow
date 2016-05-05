@@ -22,7 +22,8 @@ Vex.Flow.SVGContext = (function() {
       this.svgNS = "http://www.w3.org/2000/svg";
       var svg = this.create("svg");
       // Add it to the canvas:
-      this.element.appendChild(svg);
+      this.parent = this.element;
+      this.add(svg);
 
       // Point to it:
       this.svg = svg;
@@ -78,7 +79,7 @@ Vex.Flow.SVGContext = (function() {
     openGroup: function(cls, id, attrs) {
       var group = this.create("g");
       this.groups.push(group);
-      this.parent.appendChild(group);
+      this.add(group);
       this.parent = group;
       if (cls) group.setAttribute("class", SVGContext.addPrefix(cls));
       if (id) group.setAttribute("id", SVGContext.addPrefix(id));
