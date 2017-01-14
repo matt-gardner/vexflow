@@ -1,5 +1,5 @@
 /**
- * VexFlow 1.2.45 built on 2016-03-21.
+ * VexFlow 1.2.45 built on 2017-01-13.
  * Copyright (c) 2010 Mohit Muthanna Cheppudira <mohit@muthanna.com>
  *
  * http://www.vexflow.com  http://github.com/0xfe/vexflow
@@ -10935,6 +10935,7 @@ Vex.Flow.KeyManager = (function() {
 /* global document: false */
 
 Vex.Flow.Renderer = (function() {
+  console.log("LOADING VEXFLOW RENDERER");
   function Renderer(sel, backend) {
     if (arguments.length > 0) this.init(sel, backend);
   }
@@ -10987,6 +10988,13 @@ Vex.Flow.Renderer = (function() {
         width, height, background);
   };
 
+  Renderer.getTextSVGContext = function(options, width, height, background) {
+    var ctx = new Vex.Flow.TextSVGContext(options);
+    ctx.resize(width, height);
+
+    Renderer.lastContext = ctx;
+    return ctx;
+  };
 
   Renderer.bolsterCanvasContext = function(ctx) {
     if (Renderer.USE_CANVAS_PROXY) {
@@ -11092,8 +11100,6 @@ Vex.Flow.Renderer = (function() {
 
   return Renderer;
 }());
-
-
 
 // Vex Flow
 // Mohit Muthanna <mohit@muthanna.com>
@@ -11519,14 +11525,16 @@ Vex.Flow.SVGContext = (function() {
   SVGContext.addPrefix = Vex.Prefix;
 
   SVGContext.prototype = {
-    init: function(element) {
+    init: function(Components, element) {
+      this.Components = Components;
       // element is the parent DOM object
       this.element = element;
       // Create the SVG in the SVG namespace:
       this.svgNS = "http://www.w3.org/2000/svg";
-      var svg = this.create("svg");
+      var svg = this.create(this.Components['svg']);
       // Add it to the canvas:
-      this.element.appendChild(svg);
+      this.parent = this.element;
+      this.add(svg);
 
       // Point to it:
       this.svg = svg;
@@ -11580,9 +11588,9 @@ Vex.Flow.SVGContext = (function() {
 
     // Allow grouping elements in containers for interactivity.
     openGroup: function(cls, id, attrs) {
-      var group = this.create("g");
+      var group = this.create(this.Components['g']);
       this.groups.push(group);
-      this.parent.appendChild(group);
+      this.add(group);
       this.parent = group;
       if (cls) group.setAttribute("class", SVGContext.addPrefix(cls));
       if (id) group.setAttribute("id", SVGContext.addPrefix(id));
@@ -11818,7 +11826,7 @@ Vex.Flow.SVGContext = (function() {
       if (height < 0) this.flipRectangle(arguments);
 
       // Create the rect & style it:
-      var rect = this.create("rect");
+      var rect = this.create(this.Components['rect']);
       if(typeof attributes === "undefined") attributes = {
         fill: "none",
         "stroke-width": this.lineWidth,
@@ -11997,7 +12005,7 @@ Vex.Flow.SVGContext = (function() {
             opacity: +((sa.opacity || 0.3) / num_paths).toFixed(3),
           };
 
-          var path = this.create("path");
+          var path = this.create(this.Components['path']);
           attributes.d = this.path;
           this.applyAttributes(path, attributes);
           this.add(path);
@@ -12010,7 +12018,7 @@ Vex.Flow.SVGContext = (function() {
       // If our current path is set to glow, make it glow
       this.glow();
 
-      var path = this.create("path");
+      var path = this.create(this.Components['path']);
       if(typeof attributes === "undefined") {
         attributes = {};
         Vex.Merge(attributes, this.attributes);
@@ -12028,7 +12036,7 @@ Vex.Flow.SVGContext = (function() {
       // If our current path is set to glow, make it glow.
       this.glow();
 
-      var path = this.create("path");
+      var path = this.create(this.Components['path']);
       var attributes = {};
       Vex.Merge(attributes, this.attributes);
       attributes.fill = "none";
@@ -12042,7 +12050,7 @@ Vex.Flow.SVGContext = (function() {
 
     // ## Text Methods:
     measureText: function(text) {
-      var txt = this.create("text");
+      var txt = this.create(this.Components['text']);
       if (typeof(txt.getBBox) !== "function")
         return { x: 0, y: 0, width: 0, height: 0 };
 
@@ -12093,7 +12101,7 @@ Vex.Flow.SVGContext = (function() {
       attributes.x = x;
       attributes.y = y;
 
-      var txt = this.create("text");
+      var txt = this.create(this.Components['text']);
       txt.textContent = text;
       this.applyAttributes(txt, attributes);
       this.add(txt);
@@ -12148,6 +12156,128 @@ Vex.Flow.SVGContext = (function() {
   };
 
   return SVGContext;
+}());
+
+// Vex Flow
+//
+// @copyright Mohit Muthanna 2016
+// @author Taehoon Moon 2016
+
+/** @constructor */
+Vex.Flow.TextSVGContext = (function() {
+  function TextSVGContext(options) {
+    if (arguments.length > 0) this.init(options);
+  }
+
+  Vex.Inherit(TextSVGContext, Vex.Flow.SVGContext, {
+    init: function(options) {
+      this.React = options.React;
+      this.Components = options.Components;
+      this.fontPack = options.fontPack;
+      this.getBoundingBox = options.getBoundingBox;
+
+      TextSVGContext.superclass.init.call(this, this.Components, this.create('div'));
+    },
+
+    create: function(svgElementType) {
+      var props = {
+        style: {}
+      };
+
+      // Add xmlns to root
+      if (svgElementType === 'Svg') props['data-xmlns'] = this.svgNS;
+
+      return {
+        svgElementType: svgElementType,
+        props: props,
+        children: [],
+        setAttribute: function(propertyName, value) {
+          if (propertyName === 'class') propertyName = 'className';
+
+          this.props[propertyName] = value;
+        },
+
+        get style() {
+          return props.style;
+        },
+      };
+    },
+
+    applyAttributes: function(element, attributes) {
+      for(var propertyName in attributes) {
+        var _propertyName = propertyName.replace(
+          /-([a-z])/g,
+          function (g) { return g[1].toUpperCase(); }
+        );
+
+        element.props[_propertyName] = attributes[propertyName];
+      }
+
+      return element;
+    },
+
+    fillText: function(text, x, y) {
+      var attributes = {};
+      Vex.Merge(attributes, this.attributes);
+
+      var path = this.create(this.Components['path']);
+      var fontSize = this.getFontSize();
+      var font = this.fontPack.getFont(attributes);
+      var pathData = font.getPath(text, x, y, fontSize).toPathData();
+
+      attributes.d = pathData;
+      attributes.stroke = "none";
+      attributes.x = x;
+      attributes.y = y;
+
+      this.applyAttributes(path, attributes);
+      this.add(path);
+    },
+
+    add: function(element) {
+      this.parent.children.push(element);
+    },
+
+    getFontSize: function() {
+      var fontSize = Number(this.attributes['font-size'].replace(/[^.\d]+/g, ''));
+
+      // Convert pt to px
+      if (/pt$/.test(this.attributes['font-size'])) {
+        fontSize = (fontSize * 4 / 3) | 0;
+      }
+
+      return fontSize;
+    },
+
+    measureText: function(text) {
+      var fontSize = this.getFontSize();
+      var font = this.fontPack.getFont(this.attributes);
+      var pathData = font.getPath(text, 0, 0, fontSize).toPathData();
+
+      return this.getBoundingBox(pathData);
+    },
+
+    createReactElement: function(element, index) {
+      var children = [];
+
+      for (var i = 0; i < element.children.length; i++) {
+        children.push(this.createReactElement(element.children[i], i));
+      }
+
+      element.props["key"] = index
+      return this.React.createElement(
+        element.svgElementType, element.props, children
+      );
+    },
+
+    toSVG: function() {
+      return this.createReactElement(this.svg, 0);
+    },
+
+    iePolyfill: function() {}
+  });
+
+  return TextSVGContext;
 }());
 
 // Vex Flow

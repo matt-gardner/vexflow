@@ -12,11 +12,11 @@ Vex.Flow.TextSVGContext = (function() {
   Vex.Inherit(TextSVGContext, Vex.Flow.SVGContext, {
     init: function(options) {
       this.React = options.React;
-      this.ReactDOMServer = options.ReactDOMServer;
+      this.Components = options.Components;
       this.fontPack = options.fontPack;
       this.getBoundingBox = options.getBoundingBox;
 
-      TextSVGContext.superclass.init.call(this, this.create('div'));
+      TextSVGContext.superclass.init.call(this, this.Components, this.create('div'));
     },
 
     create: function(svgElementType) {
@@ -25,7 +25,7 @@ Vex.Flow.TextSVGContext = (function() {
       };
 
       // Add xmlns to root
-      if (svgElementType === 'svg') props['data-xmlns'] = this.svgNS;
+      if (svgElementType === 'Svg') props['data-xmlns'] = this.svgNS;
 
       return {
         svgElementType: svgElementType,
@@ -60,7 +60,7 @@ Vex.Flow.TextSVGContext = (function() {
       var attributes = {};
       Vex.Merge(attributes, this.attributes);
 
-      var path = this.create('path');
+      var path = this.create(this.Components['path']);
       var fontSize = this.getFontSize();
       var font = this.fontPack.getFont(attributes);
       var pathData = font.getPath(text, x, y, fontSize).toPathData();
@@ -97,24 +97,21 @@ Vex.Flow.TextSVGContext = (function() {
       return this.getBoundingBox(pathData);
     },
 
-    createReactElement: function(element) {
+    createReactElement: function(element, index) {
       var children = [];
 
       for (var i = 0; i < element.children.length; i++) {
-        children.push(this.createReactElement(element.children[i]));
+        children.push(this.createReactElement(element.children[i], i));
       }
 
+      element.props["key"] = index
       return this.React.createElement(
         element.svgElementType, element.props, children
       );
     },
 
     toSVG: function() {
-      var reactElement = this.createReactElement(this.svg);
-      var svgData = this.ReactDOMServer.renderToStaticMarkup(reactElement);
-
-      // React v0.15 does not support xmlns attribute, so used like this
-      return svgData.replace('data-xmlns', 'xmlns');
+      return this.createReactElement(this.svg, 0);
     },
 
     iePolyfill: function() {}

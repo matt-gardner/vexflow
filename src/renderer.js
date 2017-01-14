@@ -8,6 +8,7 @@
 /* global document: false */
 
 Vex.Flow.Renderer = (function() {
+  console.log("LOADING VEXFLOW RENDERER");
   function Renderer(sel, backend) {
     if (arguments.length > 0) this.init(sel, backend);
   }

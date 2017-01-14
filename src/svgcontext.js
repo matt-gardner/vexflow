@@ -15,12 +15,13 @@ Vex.Flow.SVGContext = (function() {
   SVGContext.addPrefix = Vex.Prefix;
 
   SVGContext.prototype = {
-    init: function(element) {
+    init: function(Components, element) {
+      this.Components = Components;
       // element is the parent DOM object
       this.element = element;
       // Create the SVG in the SVG namespace:
       this.svgNS = "http://www.w3.org/2000/svg";
-      var svg = this.create("svg");
+      var svg = this.create(this.Components['svg']);
       // Add it to the canvas:
       this.parent = this.element;
       this.add(svg);
@@ -77,7 +78,7 @@ Vex.Flow.SVGContext = (function() {
 
     // Allow grouping elements in containers for interactivity.
     openGroup: function(cls, id, attrs) {
-      var group = this.create("g");
+      var group = this.create(this.Components['g']);
       this.groups.push(group);
       this.add(group);
       this.parent = group;
@@ -315,7 +316,7 @@ Vex.Flow.SVGContext = (function() {
       if (height < 0) this.flipRectangle(arguments);
 
       // Create the rect & style it:
-      var rect = this.create("rect");
+      var rect = this.create(this.Components['rect']);
       if(typeof attributes === "undefined") attributes = {
         fill: "none",
         "stroke-width": this.lineWidth,
@@ -494,7 +495,7 @@ Vex.Flow.SVGContext = (function() {
             opacity: +((sa.opacity || 0.3) / num_paths).toFixed(3),
           };
 
-          var path = this.create("path");
+          var path = this.create(this.Components['path']);
           attributes.d = this.path;
           this.applyAttributes(path, attributes);
           this.add(path);
@@ -507,7 +508,7 @@ Vex.Flow.SVGContext = (function() {
       // If our current path is set to glow, make it glow
       this.glow();
 
-      var path = this.create("path");
+      var path = this.create(this.Components['path']);
       if(typeof attributes === "undefined") {
         attributes = {};
         Vex.Merge(attributes, this.attributes);
@@ -525,7 +526,7 @@ Vex.Flow.SVGContext = (function() {
       // If our current path is set to glow, make it glow.
       this.glow();
 
-      var path = this.create("path");
+      var path = this.create(this.Components['path']);
       var attributes = {};
       Vex.Merge(attributes, this.attributes);
       attributes.fill = "none";
@@ -539,7 +540,7 @@ Vex.Flow.SVGContext = (function() {
 
     // ## Text Methods:
     measureText: function(text) {
-      var txt = this.create("text");
+      var txt = this.create(this.Components['text']);
       if (typeof(txt.getBBox) !== "function")
         return { x: 0, y: 0, width: 0, height: 0 };
 
@@ -590,7 +591,7 @@ Vex.Flow.SVGContext = (function() {
       attributes.x = x;
       attributes.y = y;
 
-      var txt = this.create("text");
+      var txt = this.create(this.Components['text']);
       txt.textContent = text;
       this.applyAttributes(txt, attributes);
       this.add(txt);
