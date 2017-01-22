@@ -12007,6 +12007,8 @@ Vex.Flow.SVGContext = (function() {
 
           var path = this.create(this.Components['path']);
           attributes.d = this.path;
+          attributes.x = 0;
+          attributes.y = 0;
           this.applyAttributes(path, attributes);
           this.add(path);
         }
@@ -12026,6 +12028,8 @@ Vex.Flow.SVGContext = (function() {
       }
 
       attributes.d = this.path;
+      attributes.x = 0;
+      attributes.y = 0;
 
       this.applyAttributes(path, attributes);
       this.add(path);
@@ -12042,6 +12046,8 @@ Vex.Flow.SVGContext = (function() {
       attributes.fill = "none";
       attributes["stroke-width"] = this.lineWidth;
       attributes.d = this.path;
+      attributes.x = 0;
+      attributes.y = 0;
 
       this.applyAttributes(path, attributes);
       this.add(path);
@@ -12227,8 +12233,8 @@ Vex.Flow.TextSVGContext = (function() {
 
       attributes.d = pathData;
       attributes.stroke = "none";
-      attributes.x = x;
-      attributes.y = y;
+      attributes.x = 0;
+      attributes.y = 0;
 
       this.applyAttributes(path, attributes);
       this.add(path);

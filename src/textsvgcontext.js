@@ -67,8 +67,8 @@ Vex.Flow.TextSVGContext = (function() {
 
       attributes.d = pathData;
       attributes.stroke = "none";
-      attributes.x = x;
-      attributes.y = y;
+      attributes.x = 0;
+      attributes.y = 0;
 
       this.applyAttributes(path, attributes);
       this.add(path);
